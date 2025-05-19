@@ -1,0 +1,2 @@
+Completar intexp, boolexp y agregar manejo de errores en los comandos. Input  y output tambien deben ser agregagos? 
+Cómo hacer en ese caso? 
