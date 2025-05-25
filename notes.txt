@@ -1,2 +1,9 @@
+Corregir el pasaje de estados a los comandos 
+Corregir la suma para que tome los valores de 
 Completar intexp, boolexp y agregar manejo de errores en los comandos. Input  y output tambien deben ser agregagos? 
-Cómo hacer en ese caso? 
+Cómo hacer en ese caso?
+
+El el caso de la asignación, retorna otro estado nuevo o es el mismo modificado? Sería como declarativo porque no se modifica el estado original, sino que se crea uno nuevo. 
+
+#Decisión de diseño:
+Si una variable no está definida en el estado, se agrega con valor 0. Esto permite que las operaciones sobre variables no definidas no generen errores, sino que simplemente asuman un valor por defecto.
