@@ -1,6 +1,6 @@
-class State: 
-    def __init__(self):
-        self.state = {}
+class State(dict): 
+    def __init__(self, state:dict):
+        super().__init__(state)
     
     def __repr__(self):
-        return f"{self.state}"
+        return f"{super().__repr__()}"

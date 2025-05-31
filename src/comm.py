@@ -1,6 +1,9 @@
 from state import *  
 from intexp import *
 from boolexp import * 
+from output import * 
+from fail import *
+
 """
 Función semántica de cada comando 
 run :: State -> State 
@@ -9,7 +12,6 @@ run :: State -> State
 class Comm:
     def run():
         pass 
-
 
 #SIMPLE COMMANDS 
 class Skip(Comm):
@@ -33,7 +35,7 @@ class Assign(Comm):
     def run(self, state:State):
         new_state = state.copy()
         new_state[str(self.var)] = self.expr.run(state)
-        return new_state
+        return State(new_state)
             
 class Seq(Comm): 
     def __init__(self,comm1:Comm, comm2:Comm): 
@@ -43,9 +45,11 @@ class Seq(Comm):
     def __repr__(self):
         return f"Seq({self.comm1}, {self.comm2})"
     
-    def run(self, state:State): 
-        state1 = self.comm1.run(state) 
-        return self.comm2.run(state1)
+    # def run(self, state:State): 
+    #     state1 = self.comm1.run(state) 
+    #     return self.comm2.run(state1)
+    def run(self, state:State):
+        return star(self.comm2, self.comm1.run(state))
 
 class If(Comm):
     def __init__(self,b,comm1:Comm,comm2:Comm):
@@ -57,12 +61,12 @@ class If(Comm):
         return f"If {self.guard} then {self.comm1} else {self.comm2}"
     
     def run(self, state:State): 
-        if (self.guard): 
+        if (self.guard.run(state)): 
             return self.comm1.run(state)
         else:
             return self.comm2.run(state)
 
-class While(Comm): 
+class While(Comm):   #adaptar con la extensión
     def __init__(self, b:Boolexp, comm:Comm): 
         self.comm = comm
         self.guard = b
@@ -72,14 +76,13 @@ class While(Comm):
     
     def run(self, state:State): 
         #Ver si la variable está definida en el conjunto de estados
-        st_modified = state.copy()
+        st_modified = State(state.copy())
         while self.guard.run(st_modified): 
-            st_modified = self.comm.run(st_modified)
-        
+            st_modified = self.comm.run(st_modified)        
         return st_modified
 
 class Newvar(Comm):
-    def __init__(self, var, expr, comm:Comm): 
+    def __init__(self, var, expr:IntExp, comm:Comm): 
         self.var = var 
         self.expr = expr
         self.comm = comm
@@ -89,31 +92,36 @@ class Newvar(Comm):
         return f"Newvar {self.local} in {self.comm}"
 
     def run(self, state:State): 
-        if (self.var in state.keys()): 
-            old_state = state[str(self.var)]
-            st_modified = Assign(self.var, self.expr).run(state)
-            st_modified = self.comm.run(st_modified)
-            return Assign(self.var, old_state).run(st_modified)
+        if (str(self.var) in state.keys()): 
+            old_state = Nat(state[str(self.var)])
+            st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
+            return ext_newvar(Assign(self.var, old_state), st_modified)
         else: 
-            old_state = {}
-            state[str(self.var)] = {}
-            st_modified = Assign(self.var, self.expr).run(state)
-            st_modified = self.comm.run(st_modified)
-            st_modified = Assign(self.var, old_state).run(st_modified)
-            del state[str(self.var)]
-            return st_modified
-
+            st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
+            if isinstance(st_modified,Fail_type):
+                del st_modified[1][str(self.var)]
+                return st_modified
+            elif isinstance(st_modified, Output):
+                del st_modified[1][str(self.var)]
+                return st_modified
+            else:
+                del st_modified[str(self.var)] 
+                return st_modified
+                
+            
+        
 
 #FAILURES 
 class Fail(Comm): 
     def __init__(self):
-        self.fail = "Fail"
+        self.fail = 'Fail'
     
     def __repr__(self):
         return f"Fail"
     
     def run(self, state:State):
-        return ("Fail", state)             
+        return Fail_type(self.fail,state)   
+              
 
 class Catch(Comm): 
     def __init__(self, comm1:Comm, comm2:Comm):
@@ -122,12 +130,7 @@ class Catch(Comm):
     def __repr__(self):
         return f"Catch {self.comm1} with {self.comm2}"
     def run(self, state:State):
-        st_modified = self.comm1.run(state)
-        
-        if (isinstance(st_modified,tuple) ): #Caso que retorne tupla, adaptar para el output  
-            return self.comm2.run(st_modified[1])
-        else: 
-            return st_modified
+        return ext_catch(self.comm2, self.comm1.run(state))
 
 #IO
 class Out(Comm): 
@@ -138,7 +141,7 @@ class Out(Comm):
         return f"Out({self.expr})"
     
     def run(self, state:State): 
-        return (self.expr.run(state), state)
+        return Output(self.expr.run(state), state)
 
 class Inp(Comm): 
     def __init__(self, var:Var): 
@@ -157,4 +160,29 @@ class Inp(Comm):
             except ValueError:
                 print(f"«{num}» no es un entero válido. Intenta de nuevo\n")
             
+#EXTENSIONES           
+#--- (_)*
+def star(comm:Comm, x): 
+    if isinstance(x,Fail_type): #si x fuera un output, entra por acá y se hace lio 
+        return x 
+    elif isinstance(x,Output): 
+        return Output(x[0], comm.run(x[1]))
+    else: 
+        return comm.run(x)
 
+#--- (_)+
+def  ext_catch(comm:Comm, x): 
+    if isinstance(x,Fail_type): #si x fuera un output, entra por acá y se hace lio 
+        return comm.run(x[1])
+    elif isinstance(x,Output): 
+        return Output(x[0], comm.run(x[1]))
+    else: 
+        return x
+    
+def ext_newvar(comm:Comm, x):  
+    if isinstance(x,Fail_type): 
+        return Fail_type(x[0],comm.run(x[1]))
+    elif isinstance(x,Output): 
+        return Output(x[0], comm.run(x[1]))
+    else: 
+        return comm.run(x)

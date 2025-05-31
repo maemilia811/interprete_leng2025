@@ -40,6 +40,7 @@ class Equal(Boolexp):
         return f"Equal({self.expr1},{self.expr2})"
     
     def run(self, state:State): 
+        print("eq", self.expr1.run(state) == self.expr2.run(state))
         return self.expr1.run(state) == self.expr2.run(state) 
     
 # < 
