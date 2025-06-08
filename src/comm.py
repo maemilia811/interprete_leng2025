@@ -1,8 +1,6 @@
-from state import *  
+from type import Output, Fail_type, State
 from intexp import *
 from boolexp import * 
-from output import * 
-from fail import *
 
 """
 Función semántica de cada comando 
@@ -18,84 +16,98 @@ class Skip(Comm):
     def __init__ (self):
         pass
 
-    def __repr__():
+    def __repr__(self):
         return "Skip()"
     
     def run(self,state:State):
         return state 
     
-class Assign(Comm):
+class Assign(Comm):  
     def __init__(self, var:Var, expr:IntExp):
-        self.var = var
-        self.expr = expr
+        if isinstance(var,Var) and isinstance(expr,IntExp):
+            self.var = var
+            self.expr = expr
+        else: 
+            raise TypeError("Parámetros no validos para Assign")
     
     def __repr__(self):
         return f"Assign({self.var}, {self.expr})"
     
     def run(self, state:State):
-        new_state = state.copy()
+        new_state = State(state.copy())
         new_state[str(self.var)] = self.expr.run(state)
-        return State(new_state)
+        return new_state
             
-class Seq(Comm): 
+class Seq(Comm):
     def __init__(self,comm1:Comm, comm2:Comm): 
-        self.comm1 = comm1
-        self.comm2 = comm2 
+        if isinstance(comm1,Comm) and isinstance(comm2, Comm): 
+            self.comm1 = comm1
+            self.comm2 = comm2 
+        else: 
+            raise TypeError("Parámetros no validos para Seq")
     
     def __repr__(self):
         return f"Seq({self.comm1}, {self.comm2})"
     
-    # def run(self, state:State): 
-    #     state1 = self.comm1.run(state) 
-    #     return self.comm2.run(state1)
     def run(self, state:State):
         return star(self.comm2, self.comm1.run(state))
 
-class If(Comm):
-    def __init__(self,b,comm1:Comm,comm2:Comm):
-        self.guard = b 
-        self.comm1 = comm1
-        self.comm2 = comm2 
+class If(Comm):  
+    def __init__(self,condition,comm1:Comm,comm2:Comm):
+        if isinstance(condition, Boolexp) and isinstance(comm1,Comm) and isinstance(comm2, Comm):
+            self.guard = condition
+            self.comm1 = comm1
+            self.comm2 = comm2 
+        else: 
+            raise TypeError("Parámetros no validos para If")
 
     def __repr__(self): 
         return f"If {self.guard} then {self.comm1} else {self.comm2}"
     
     def run(self, state:State): 
-        if (self.guard.run(state)): 
+        if isinstance(self.guard.run(state), Tr): 
             return self.comm1.run(state)
         else:
             return self.comm2.run(state)
 
-class While(Comm):   #adaptar con la extensión
-    def __init__(self, b:Boolexp, comm:Comm): 
-        self.comm = comm
-        self.guard = b
+class While(Comm):   #corregido
+    def __init__(self, condition:Boolexp, comm:Comm): 
+        if isinstance(condition, Boolexp) and isinstance(comm,Comm):
+            self.comm = comm
+            self.guard = condition
+        else: 
+            raise TypeError("Parámetros no validos para While")
     
     def __repr__(self):
         return f"While {self.guard} do {self.comm}"
     
     def run(self, state:State): 
-        #Ver si la variable está definida en el conjunto de estados
         st_modified = State(state.copy())
-        while self.guard.run(st_modified): 
-            st_modified = self.comm.run(st_modified)        
+        print('guiarda', self.guard)
+        while isinstance(self.guard.run(st_modified), Tr): 
+            st_modified = self.comm.run(st_modified)   
         return st_modified
 
 class Newvar(Comm):
     def __init__(self, var, expr:IntExp, comm:Comm): 
-        self.var = var 
-        self.expr = expr
-        self.comm = comm
-        self.local = Assign(var, expr)
-    
+        if isinstance(var,Var) and isinstance(expr,IntExp) and isinstance(comm,Comm):
+            self.var = var 
+            self.expr = expr
+            self.comm = comm
+        else:
+            raise TypeError("Parámetros no validos para Newvar")
+
     def __repr__(self):
-        return f"Newvar {self.local} in {self.comm}"
+        return f"Newvar {self.var}:= {self.expr} in {self.comm}"
 
     def run(self, state:State): 
-        if (str(self.var) in state.keys()): 
-            old_state = Nat(state[str(self.var)])
+        """
+        ver acá, creo que hay que corregirla, me parece que hay guardas en las q no entra jamas
+        """
+        if (str(self.var) in state.keys()): #si es tipo output no tiene state.keys()
+            old_value = Nat(state[str(self.var)])
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            return ext_newvar(Assign(self.var, old_state), st_modified)
+            return ext_newvar(Assign(self.var, old_value), st_modified)
         else: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
             if isinstance(st_modified,Fail_type):
@@ -108,11 +120,8 @@ class Newvar(Comm):
                 del st_modified[str(self.var)] 
                 return st_modified
                 
-            
-        
-
 #FAILURES 
-class Fail(Comm): 
+class Fail(Comm):      #corregido
     def __init__(self):
         self.fail = 'Fail'
     
@@ -120,53 +129,75 @@ class Fail(Comm):
         return f"Fail"
     
     def run(self, state:State):
-        return Fail_type(self.fail,state)   
+        if isinstance(state,Fail_type): 
+            return state
+        else: 
+            return Fail_type(self.fail,state)   
               
 
-class Catch(Comm): 
+class Catch(Comm):  #corregido
     def __init__(self, comm1:Comm, comm2:Comm):
-        self.comm1 = comm1
-        self.comm2 = comm2 
+        if isinstance(comm1, Comm) and isinstance(comm2, Comm):   
+            self.comm1 = comm1
+            self.comm2 = comm2 
+        else: 
+            raise TypeError("Parámetros no validos para Newvar")
+        
     def __repr__(self):
         return f"Catch {self.comm1} with {self.comm2}"
+    
     def run(self, state:State):
         return ext_catch(self.comm2, self.comm1.run(state))
 
 #IO
 class Out(Comm): 
     def __init__(self, expr:IntExp): 
-        self.expr = expr
-    
+        if isinstance(expr,IntExp): 
+            self.expr = expr
+        else: 
+            raise TypeError("Parámetros no validos para Out")
+        
     def __repr__(self):
         return f"Out({self.expr})"
     
     def run(self, state:State): 
         return Output(self.expr.run(state), state)
 
-class Inp(Comm): 
+class Inp(Comm):
     def __init__(self, var:Var): 
-        self.var = var
-    
-    def __repr__(self):
-        return f"Inp({self.var})"
-    
-    def run(self, state:State): 
+        if isinstance(var,Var): 
+            self.var = var
+        else: 
+            raise TypeError("Parámetros no validos para Inp")
+
+    def _update_recursive(self, state, value):
+        if isinstance(state, State):
+            state[str(self.var)] = value
+            return state
+        elif isinstance(state, Output):
+            head, tail = state
+            return Output(head, self._update_recursive(tail, value))
+        else:
+            raise TypeError(f"Estado no reconocible: {state!r}")
+
+    def run(self, state):
         while True:
             num = input("Ingrese número entero\n")
             try:
                 value = int(num)
-                state[str(self.var)] = value
-                return state 
+                new_state = self._update_recursive(state, value)
+                return new_state
             except ValueError:
                 print(f"«{num}» no es un entero válido. Intenta de nuevo\n")
-            
+
+
 #EXTENSIONES           
 #--- (_)*
 def star(comm:Comm, x): 
-    if isinstance(x,Fail_type): #si x fuera un output, entra por acá y se hace lio 
+    if isinstance(x,Fail_type): 
         return x 
     elif isinstance(x,Output): 
-        return Output(x[0], comm.run(x[1]))
+        return Output(x[0], star(comm,x[1]))  
     else: 
         return comm.run(x)
 
@@ -174,8 +205,8 @@ def star(comm:Comm, x):
 def  ext_catch(comm:Comm, x): 
     if isinstance(x,Fail_type): #si x fuera un output, entra por acá y se hace lio 
         return comm.run(x[1])
-    elif isinstance(x,Output): 
-        return Output(x[0], comm.run(x[1]))
+    elif isinstance(x,Output):  
+        return Output(x[0], comm.run(x[1]))  
     else: 
         return x
     
@@ -186,3 +217,7 @@ def ext_newvar(comm:Comm, x):
         return Output(x[0], comm.run(x[1]))
     else: 
         return comm.run(x)
+
+#--- la daga está puesta directamente en la newvar 
+
+

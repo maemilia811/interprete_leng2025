@@ -7,6 +7,10 @@ Si se pide input y se ingresa un valor no entero, se vuelve a pedir el input. Es
 El el caso de la asignación, retorna otro estado nuevo o es el mismo modificado? Sería como declarativo porque no se modifica el estado original, sino que se crea uno nuevo. 
 
 # TODO
+Agregar chequeo de tipos en la inicializacion de las clases de boolexp e intexpr
 Que pasa con la división por cero?
-Adaptar los comandos con las extensiones f*, f+, etc. 
-Testing de los comandos
+Corregir las extensiones 
+Corregir el newvar 
+Testing de los comandos 
+Ver con las expresiones enteras si dejarlas que retornen instancias de true y false o directamente booleanos
+Chequear el comando ese con fail 
