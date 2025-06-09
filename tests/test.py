@@ -1,19 +1,17 @@
-from src import * 
 import unittest
+from src import * 
+class TestIntexpr(unittest.TestCase): 
+    #probar hacer cálculos con cosas de otro tipo
+    
+    pass
 
-
-
-def intexp_tests():
+class TestBoolexpr(unittest.TestCase): 
     pass 
 
-def boolexp_tests():
+class TestComm(unittest.TestCase): 
     pass 
 
-def comm_tests():
-    pass 
 
-def main(): 
-    pass 
+if __name__ == '__main__':
+    unittest.main()
 
-if __name__ == "__main__":
-   main()

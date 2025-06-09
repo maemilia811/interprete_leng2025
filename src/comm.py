@@ -35,7 +35,7 @@ class Assign(Comm):
     
     def run(self, state:State):
         new_state = State(state.copy())
-        new_state[str(self.var)] = self.expr.run(state)
+        new_state[str(self.var)] = self.expr.run(state) #corregir acá
         return new_state
             
 class Seq(Comm):
@@ -76,16 +76,15 @@ class While(Comm):   #corregido
             self.comm = comm
             self.guard = condition
         else: 
-            raise TypeError("Parámetros no validos para While")
+            raise TypeError(f"Parámetros no validos para While{type(condition), type(comm)}")
     
     def __repr__(self):
         return f"While {self.guard} do {self.comm}"
     
     def run(self, state:State): 
         st_modified = State(state.copy())
-        print('guiarda', self.guard)
         while isinstance(self.guard.run(st_modified), Tr): 
-            st_modified = self.comm.run(st_modified)   
+            st_modified = star(self.comm, st_modified)   
         return st_modified
 
 class Newvar(Comm):
@@ -101,25 +100,14 @@ class Newvar(Comm):
         return f"Newvar {self.var}:= {self.expr} in {self.comm}"
 
     def run(self, state:State): 
-        """
-        ver acá, creo que hay que corregirla, me parece que hay guardas en las q no entra jamas
-        """
-        if (str(self.var) in state.keys()): #si es tipo output no tiene state.keys()
-            old_value = Nat(state[str(self.var)])
+        old_value = get_old_value(self.var, state)
+        if old_value != {}: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            return ext_newvar(Assign(self.var, old_value), st_modified)
+            return daga(Assign(self.var, Nat(old_value)), st_modified)
         else: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            if isinstance(st_modified,Fail_type):
-                del st_modified[1][str(self.var)]
-                return st_modified
-            elif isinstance(st_modified, Output):
-                del st_modified[1][str(self.var)]
-                return st_modified
-            else:
-                del st_modified[str(self.var)] 
-                return st_modified
-                
+            return delete_var(self.var, st_modified)
+        
 #FAILURES 
 class Fail(Comm):      #corregido
     def __init__(self):
@@ -134,7 +122,6 @@ class Fail(Comm):      #corregido
         else: 
             return Fail_type(self.fail,state)   
               
-
 class Catch(Comm):  #corregido
     def __init__(self, comm1:Comm, comm2:Comm):
         if isinstance(comm1, Comm) and isinstance(comm2, Comm):   
@@ -170,14 +157,15 @@ class Inp(Comm):
         else: 
             raise TypeError("Parámetros no validos para Inp")
 
-    def _update_recursive(self, state, value):
+    def _update_recursive(self, state, value): #AGREGAR ACA EN CASO DE QUE SEA TIPO Fail (creo que nunca entra)
         if isinstance(state, State):
-            state[str(self.var)] = value
-            return state
+            new_state = State(state.copy())
+            new_state[str(self.var)] = value
+            return new_state
         elif isinstance(state, Output):
             head, tail = state
             return Output(head, self._update_recursive(tail, value))
-        else:
+        else: 
             raise TypeError(f"Estado no reconocible: {state!r}")
 
     def run(self, state):
@@ -185,16 +173,15 @@ class Inp(Comm):
             num = input("Ingrese número entero\n")
             try:
                 value = int(num)
-                new_state = self._update_recursive(state, value)
-                return new_state
+                return self._update_recursive(state, value)
             except ValueError:
                 print(f"«{num}» no es un entero válido. Intenta de nuevo\n")
-
 
 #EXTENSIONES           
 #--- (_)*
 def star(comm:Comm, x): 
     if isinstance(x,Fail_type): 
+        print('estado de fail', x)
         return x 
     elif isinstance(x,Output): 
         return Output(x[0], star(comm,x[1]))  
@@ -203,21 +190,36 @@ def star(comm:Comm, x):
 
 #--- (_)+
 def  ext_catch(comm:Comm, x): 
-    if isinstance(x,Fail_type): #si x fuera un output, entra por acá y se hace lio 
+    if isinstance(x,Fail_type): 
         return comm.run(x[1])
     elif isinstance(x,Output):  
-        return Output(x[0], comm.run(x[1]))  
+        return Output(x[0], ext_catch(comm,x[1]))  
     else: 
         return x
     
-def ext_newvar(comm:Comm, x):  
+#--- ()$ 
+def daga(comm:Comm, x): 
     if isinstance(x,Fail_type): 
-        return Fail_type(x[0],comm.run(x[1]))
-    elif isinstance(x,Output): 
-        return Output(x[0], comm.run(x[1]))
+        return Fail_type(x[0], comm.run(x[1]))  #si está bien implementado no debería romperse aca
+    elif isinstance(x, Output): 
+        return Output(x[0], daga(comm, x[1]))
     else: 
         return comm.run(x)
 
-#--- la daga está puesta directamente en la newvar 
-
-
+def delete_var(var, state): 
+    if isinstance(state, Output): 
+        return Output(state[0], delete_var(var,state[1]))
+    elif isinstance(state, Fail_type): 
+        return Fail_type(state[0], delete_var(var,state[1]))
+    else: 
+        del state[str(var)]
+        return state
+    
+def get_old_value(var, state): 
+    if isinstance(state, Output) or isinstance(state,Fail_type): 
+        return get_old_value(var,state[1])
+    else: 
+        if str(var) in state.keys():
+            return state[str(var)]
+        else:
+            return {}

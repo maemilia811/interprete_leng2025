@@ -33,13 +33,16 @@ class Fal(Boolexp):
         return self.false
 class Equal(Boolexp):
     def __init__(self, expr1:IntExp, expr2: IntExp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
+        if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresiones mal tipadas")
 
     def __repr__(self):
         return f"Equal({self.expr1},{self.expr2})"
     
-    def run(self, state:State): #debería pooner algo de omega? 
+    def run(self, state:State):
         if(self.expr1.run(state) == self.expr2.run(state)):
             return Tr()
         else:
@@ -48,8 +51,11 @@ class Equal(Boolexp):
 # < 
 class MinThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
+        if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresiones mal tipadas")
 
     def __repr__(self):
         return f"MinThan({self.expr1},{self.expr2})"
@@ -62,9 +68,12 @@ class MinThan(Boolexp):
 # > 
 class MaxThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+        if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresiones mal tipadas")
+        
     def __repr__(self):
         return f"MaxThan({self.expr1},{self.expr2})"
     
@@ -77,8 +86,11 @@ class MaxThan(Boolexp):
 # =< 
 class MinEqThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
+        if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresiones mal tipadas")
 
     def __repr__(self):
         return f"MaxThan({self.expr1},{self.expr2})"
@@ -92,9 +104,12 @@ class MinEqThan(Boolexp):
 # >= 
 class MaxEqThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+        if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresiones mal tipadas")
+        
     def __repr__(self):
         return f"MaxThan({self.expr1},{self.expr2})"
     
@@ -107,7 +122,10 @@ class MaxEqThan(Boolexp):
 #¬
 class NegBool(Boolexp): 
     def __init__(self, expr1:Boolexp): 
-        self.expr1 = expr1
+        if isinstance(expr1, Boolexp): 
+            self.expr1 = expr1
+        else: 
+            raise TypeError("Expresión mal tipada")
 
     def __repr__(self):
         return f"NegBool({self.expr1})"
@@ -120,8 +138,11 @@ class NegBool(Boolexp):
     
 class Conj(Boolexp): 
     def __init__(self, expr1:Boolexp, expr2: Boolexp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
+        if isinstance(expr1,Boolexp) and isinstance(expr2, Boolexp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresión mal tipada")
 
     def __repr__(self):
         return f"Conj({self.expr1}, {self.expr2})"
@@ -134,9 +155,12 @@ class Conj(Boolexp):
 
 class Disj(Boolexp): 
     def __init__(self, expr1:Boolexp, expr2: Boolexp): 
-        self.expr1 = expr1
-        self.expr2 = expr2
-
+        if isinstance(expr1,Boolexp) and isinstance(expr2, Boolexp): 
+            self.expr1 = expr1
+            self.expr2 = expr2
+        else: 
+            raise TypeError("Expresión mal tipada")
+        
     def __repr__(self):
         return f"Disj({self.expr1}, {self.expr2})"
     
@@ -145,4 +169,3 @@ class Disj(Boolexp):
             return Tr()
         else: 
             return Fal()
-

@@ -5,23 +5,6 @@ from boolexp import *
 
 
 def main(): 
-    # state = {}
-    # st_modified = Seq(Assign(Var("x"), Nat(5)),
-    #                  Assign(Var("x"), 
-    #                         Product(Var("x"),
-    #                             Nat(5)))).run(state) #tiene que recibir un estado para modificar eso
-
-    # print(state)
-    # st2 = Assign(Var("z"), Var("y")).run(state)
-    # print(st_modified) 
-    # print(st2)
-    # print(NegBool(Fal()).run(state))
-    # #print(Seq(Seq(Inp(Var("x")), Inp(Var("y"))), Out(Var("x"))).run(state))
-    # print(Catch(Skip(), Assign(Var("x"),Nat(80000))).run(state))
-    # print(While(MinThan(Var("x"),Nat(10)), 
-    #             Assign (Var("x"),  Sum(Var("x"),
-    #                                 Nat(1)))).run(state))
-    
     state = State({})
     print("--------Imperativo Comun")
     print(Assign(Var("z"), Nat(32)), Assign(Var("z"), Nat(32)).run(state))
@@ -40,6 +23,7 @@ def main():
     print(Seq(Fail(),While(Tr(), Skip())).run(state))
     print(Catch(Fail(), Assign(Var('f'),Nat(40))).run(state))
     print(Catch(Fail(), Fail()).run(state))
+    print(Catch(Seq(Out(Var('x')), Fail()), Seq(Assign(Var('f'),Nat(40)), Out(Var('f')))).run(state))
    
     print("--------Newvar")
     state2 = State({'x': 5})
@@ -56,9 +40,7 @@ def main():
 
     print("--------Input")
     print(Seq(Out(Var("x")), Inp(Var("x"))).run(state))
-    
-    #CORREGIR ESTE
-    print(Seq(Out(Var("x")), Seq(Assign(Var("y"), Nat(9)), Seq(Fail(), Inp(Var("z"))))).run(state))
+    print( Seq(Out(Var("x")), Seq(Assign(Var("y"), Nat(9)), Seq(Fail(), Inp(Var("z"))))).run(state))
     
     #print(Assign(Var('d'), Nat(-0.3)).run(state))
     #print(Sum(Nat(00), Tr()).run(state))
@@ -66,14 +48,79 @@ def main():
     #not valid program
     # print(Newvar(Var('x'), Inp(Var('x')), Out(Var('x'))).run(state))
 
-    #print(While(MinThan(Var('x'),Nat(10)), Seq(Seq(Inp(Var('y')), Out(Var('y'))), Assign(Var('x'),Sum(Var('x'), Nat(1))))).run(state))
-    #print(Seq(Seq(Inp(Var('x')), Out(Var('x'))), Seq(Seq(Inp(Var('x')), Out(Var('x'))),Seq(Inp(Var('x')), Out(Var('x'))))).run(state))
-    # print(Seq(Out(Var('x')),Newvar(Var('y'), Nat(8),Out(Var('y')))).run(state))
+    print(While(MinThan(Var('x'),Nat(10)), Seq(Seq(Inp(Var('y')), Out(Var('y'))), Assign(Var('x'),Sum(Var('x'), Nat(1))))).run(state))
+    print(Seq(Seq(Inp(Var('x')), Out(Var('x'))), Seq(Seq(Inp(Var('x')), Out(Var('x'))),Seq(Inp(Var('x')), Out(Var('x'))))).run(state))
+    print(Seq(Out(Var('x')),Newvar(Var('y'), Nat(8),Out(Var('y')))).run(state))
     
     # #chequear bien si ertorna los outpout en orden correctos
     # print(While(MinThan(Var('x'),Nat(10)), 
     #       Seq(Seq(Seq(Out(Var('x')), Newvar(Var('y'), Nat(811), Out(Var('y')))), Out(Var('y'))), Assign(Var('x'),Sum(Var('x'), Nat(1))))).run(state))
 
-    print(Assign(Var('y'), Tr()).run(state))
+    #print(Assign(Var('y'), Tr()).run(state))
+
+    print(Seq(Out(Var('x')), Newvar(Var('x'), Nat(8),Out(Var('x')))).run(state))
+
+
+
+    print(While(MinThan(Var('x'), Nat(2)), 
+                If(Equal(Var('x'), Nat(0)),   
+                    Seq(Out(Var('x')), Assign(Var('x'),Sum(Var('x'), Nat(1)))), 
+                Seq(Assign(Var('x'),Sum(Var('x'), Nat(1))), 
+                    Assign(Var('x'),Sum(Var('x'), Nat(1)))))).run(state))
+    
+
+    print(While(MinThan(Var('x'), Nat(2)), 
+                    If(Equal(Var('x'), Nat(0)),   
+                        Seq(Out(Var('x')), Assign(Var('x'),Sum(Var('x'), Nat(1)))), 
+                    Seq(Newvar(Var('x'), Nat(10), Out(Var('x'))), 
+                        Assign(Var('x'),Sum(Var('x'), Nat(1)))))).run(state))
+    
+    print(Seq(Fail(), Fail()).run(state))
+
+    print(Newvar(Var('x'), Nat(5), 
+    Seq(
+        Out(Var('x')),
+        Seq(
+        Assign(Var('x'), Nat(10)),
+        Out(Var('x')))
+    )).run(state))
+
+
+    print(Seq(
+    Assign(Var('x'), Nat(0)),
+    While(
+        MinThan(Var('x'), Nat(5)),
+        Seq(
+            Out(Var('x')),
+            Assign(Var('x'), Sum(Var('x'), Nat(1)))
+        )
+    )
+    ).run(state))
+
+    print(Seq(
+    Assign(Var('x'), Nat(10)),
+    Seq(Assign(Var('y'), Nat(5)),
+    If(
+        Conj(
+            MaxThan(Var('x'), Nat(5)),
+            MinThan(Var('y'), Nat(10))
+        ),
+        Out(Sum(Var('x'), Var('y'))),
+        Out(Subs(Var('x'), Var('y')))
+    ))
+).run(state))
+    
+
+
+    print(Seq(
+    Assign(Var('x'), Nat(5)),
+    Catch(
+        Seq(
+            Fail(),
+            Out(Var('x'))
+        ),
+        Out(Nat(42))
+    )
+).run(state))
 
 main()

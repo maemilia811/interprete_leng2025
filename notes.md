@@ -6,11 +6,14 @@ Si se pide input y se ingresa un valor no entero, se vuelve a pedir el input. Es
 
 El el caso de la asignación, retorna otro estado nuevo o es el mismo modificado? Sería como declarativo porque no se modifica el estado original, sino que se crea uno nuevo. 
 
+El input se implementa recursivamente para evitar retornar una funcion
+
+
 # TODO
-Agregar chequeo de tipos en la inicializacion de las clases de boolexp e intexpr
-Que pasa con la división por cero?
-Corregir las extensiones 
-Corregir el newvar 
-Testing de los comandos 
-Ver con las expresiones enteras si dejarlas que retornen instancias de true y false o directamente booleanos
+asignación de Nat al estado
+cambiar nombre del comando Nat por algo entero y cambiar output por out_type
+revisar el fail_type
 Chequear el comando ese con fail 
+Testing de los comandos 
+Que pasa con la división por cero?
+ver que pasa con expresiones booleanas, si hay que agregar => y eso. 
