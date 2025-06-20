@@ -1,8 +1,6 @@
-#Main para testear casos de uso del programa 
 from intexp import * 
 from comm import Seq, Assign, Catch, Inp, Out, Skip, While, Newvar, Fail, If
 from boolexp import *  
-
 
 def main(): 
     """Interfaz para probar propios programas
@@ -20,7 +18,6 @@ def main():
     print("--------Fallas")
     print(Seq(Fail(), Assign(Var('x'),Num(9))).run(state))
     print(Seq(Assign(Var('x'),Num(9)),Fail()).run(state))
-    #$print(Seq(While(Tr(), Skip()),Fail()).run(state))
     print(Seq(Fail(),While(Tr(), Skip())).run(state))
     print(Catch(Fail(), Assign(Var('f'),Num(40))).run(state))
     print(Catch(Fail(), Fail()).run(state))
@@ -41,27 +38,20 @@ def main():
 
     print("--------Input")
     print(Seq(Out(Var("x")), Inp(Var("x"))).run(state))
-    print( Seq(Out(Var("x")), Seq(Assign(Var("y"), Num(9)), Seq(Fail(), Inp(Var("z"))))).run(state))
-    
-    #print(Assign(Var('d'), Num(-0.3)).run(state))
-    #print(Sum(Num(00), Tr()).run(state))
+    print(Seq(Out(Var("x")), Seq(Assign(Var("y"), Num(9)), Seq(Fail(), Inp(Var("z"))))).run(state))
+   
 
-
+    print("--------Programas")
     print(While(LessThan(Var('x'),Num(10)), Seq(Seq(Inp(Var('y')), Out(Var('y'))), Assign(Var('x'),Sum(Var('x'), Num(1))))).run(state))
     print(Seq(Seq(Inp(Var('x')), Out(Var('x'))), Seq(Seq(Inp(Var('x')), Out(Var('x'))),Seq(Inp(Var('x')), Out(Var('x'))))).run(state))
     print(Seq(Out(Var('x')),Newvar(Var('y'), Num(8),Out(Var('y')))).run(state))
-    
     print(Seq(Out(Var('x')), Newvar(Var('x'), Num(8),Out(Var('x')))).run(state))
-
-
-
     print(While(LessThan(Var('x'), Num(2)), 
                 If(Equal(Var('x'), Num(0)),   
                     Seq(Out(Var('x')), Assign(Var('x'),Sum(Var('x'), Num(1)))), 
                 Seq(Assign(Var('x'),Sum(Var('x'), Num(1))), 
                     Assign(Var('x'),Sum(Var('x'), Num(1)))))).run(state))
     
-
     print(While(LessThan(Var('x'), Num(2)), 
                     If(Equal(Var('x'), Num(0)),   
                         Seq(Out(Var('x')), Assign(Var('x'),Sum(Var('x'), Num(1)))), 
@@ -77,7 +67,6 @@ def main():
         Assign(Var('x'), Num(10)),
         Out(Var('x')))
     )).run(state))
-
 
     print(Seq(
     Assign(Var('x'), Num(0)),
@@ -112,8 +101,7 @@ def main():
         ),
         Out(Num(42))
     )
-).run(state))
-    print("while true do fail")
+    ).run(state))
     print(While(Tr(),Fail()).run(state))
 
 main()
