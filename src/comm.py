@@ -35,7 +35,7 @@ class Assign(Comm):
     
     def run(self, state:State):
         new_state = State(state.copy())
-        new_state[str(self.var)] = self.expr.run(state) #corregir acá
+        new_state[str(self.var)] = self.expr.run(state) 
         return new_state
             
 class Seq(Comm):
@@ -159,7 +159,7 @@ class Inp(Comm):
         else: 
             raise TypeError("Parámetros no validos para Inp")
 
-    def _update_recursive(self, state, value): #AGREGAR ACA EN CASO DE QUE SEA TIPO Fail (creo que nunca entra)
+    def _update_recursive(self, state, value): 
         if isinstance(state, State):
             new_state = State(state.copy())
             new_state[str(self.var)] = value
@@ -201,7 +201,7 @@ def  ext_catch(comm:Comm, x):
 #--- ()$ 
 def daga(comm:Comm, x): 
     if isinstance(x,Fail_type): 
-        return Fail_type(x[0], comm.run(x[1]))  #si está bien implementado no debería romperse aca
+        return Fail_type(x[0], comm.run(x[1])) 
     elif isinstance(x, Output_type): 
         return Output_type(x[0], daga(comm, x[1]))
     else: 
