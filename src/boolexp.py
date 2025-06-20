@@ -44,12 +44,12 @@ class Equal(Boolexp):
     
     def run(self, state:State):
         if(self.expr1.run(state) == self.expr2.run(state)):
-            return Tr()
+            return Tr().run(state)
         else:
-            return Fal()
+            return Fal().run(state)
     
 # < 
-class MinThan(Boolexp): 
+class LessThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
         if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
             self.expr1 = expr1
@@ -58,15 +58,15 @@ class MinThan(Boolexp):
             raise TypeError("Expresiones mal tipadas")
 
     def __repr__(self):
-        return f"MinThan({self.expr1},{self.expr2})"
+        return f"LessThan({self.expr1},{self.expr2})"
     
     def run(self, state:State): 
         if self.expr1.run(state) < self.expr2.run(state): 
-            return Tr()
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)
 # > 
-class MaxThan(Boolexp): 
+class GreaterThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
         if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
             self.expr1 = expr1
@@ -79,12 +79,12 @@ class MaxThan(Boolexp):
     
     def run(self, state:State): 
         if self.expr1.run(state) > self.expr2.run(state): 
-            return Tr()
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)
 
 # =< 
-class MinEqThan(Boolexp): 
+class LessEqThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
         if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
             self.expr1 = expr1
@@ -97,12 +97,12 @@ class MinEqThan(Boolexp):
     
     def run(self, state:State): 
         if self.expr1.run(state) <= self.expr2.run(state): 
-            return Tr()
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)
 
 # >= 
-class MaxEqThan(Boolexp): 
+class GtEqThan(Boolexp): 
     def __init__(self, expr1:IntExp, expr2: IntExp): 
         if isinstance(expr1,IntExp) and isinstance(expr2, IntExp): 
             self.expr1 = expr1
@@ -115,9 +115,9 @@ class MaxEqThan(Boolexp):
     
     def run(self, state:State): 
         if self.expr1.run(state) >= self.expr2.run(state): 
-            return Tr()
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)
 
 #¬
 class NegBool(Boolexp): 
@@ -131,10 +131,10 @@ class NegBool(Boolexp):
         return f"NegBool({self.expr1})"
     
     def run(self, state:State): 
-        if isinstance(self.expr1.run(state),Tr): 
-            return Fal()
+        if self.expr1.run(state): 
+            return Fal().run(state)
         else: 
-            return Tr()
+            return Tr().run(state)
     
 class Conj(Boolexp): 
     def __init__(self, expr1:Boolexp, expr2: Boolexp): 
@@ -148,10 +148,10 @@ class Conj(Boolexp):
         return f"Conj({self.expr1}, {self.expr2})"
     
     def run(self, state:State): 
-        if isinstance(self.expr1.run(state),Tr) and isinstance(self.expr2.run(state),Tr): 
-            return Tr()
+        if self.expr1.run(state) and self.expr2.run(state): 
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)
 
 class Disj(Boolexp): 
     def __init__(self, expr1:Boolexp, expr2: Boolexp): 
@@ -165,7 +165,7 @@ class Disj(Boolexp):
         return f"Disj({self.expr1}, {self.expr2})"
     
     def run(self, state:State): 
-        if isinstance(self.expr1.run(state),Tr) or isinstance(self.expr2.run(state),Tr): 
-            return Tr()
+        if self.expr1.run(state) or self.expr2.run(state): 
+            return Tr().run(state)
         else: 
-            return Fal()
+            return Fal().run(state)

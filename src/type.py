@@ -1,15 +1,17 @@
 
 class State(dict): 
     def __init__(self, state:dict):
-        super().__init__(state)
+        if isinstance(state,dict):
+            super().__init__(state)
+        else: 
+            raise TypeError("Parámetros no validos para State")
     
     def __repr__(self):
         return f"{super().__repr__()}"
 
-class Output(tuple): 
+class Output_type(tuple): 
     def __new__(cls, e, state: State):
-        return super().__new__(cls, (e, state))  # pasás una tupla con los valores
-
+        return super().__new__(cls, (e, state))  
     def __repr__(self):
         return f"{super().__repr__()}"
     

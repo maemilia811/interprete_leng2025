@@ -25,20 +25,20 @@ class Var(IntExp):
                 return state[str(self.var)]
             else: 
                 return 0
-        elif isinstance(state, Output) or isinstance(state,Fail_type):
+        elif isinstance(state, Output_type) or isinstance(state,Fail_type):
             return self.run(state[1])
         else:
             raise TypeError(f"Estado no reconocible: {state!r}")
 
-class Nat(IntExp):    #corregida
+class Num(IntExp):
     def __init__(self, number:int):
         if isinstance(number, int):
             self.n = number
         else:
-            raise TypeError(f"Nat solo acepta enteros de tipo int, pero recibió {type(number).__name__}")
+            raise TypeError(f"Num solo acepta enteros de tipo int, pero recibió {type(number).__name__}")
    
     def __repr__(self):
-        return f"Nat({self.n})"
+        return f"Num({self.n})"
 
     def run(self,state:State): 
         return self.n 
@@ -60,8 +60,8 @@ class Sum(IntExp):
 class Product (IntExp): 
     def __init__(self, expr1:IntExp, expr2:IntExp):
         if (isinstance(expr1,IntExp) and isinstance(expr2, IntExp)): 
-            self.sum1 = expr1
-            self.sum2 = expr2
+            self.expr1 = expr1
+            self.expr2 = expr2
         else: 
             raise TypeError(f"Product solo acepta expresiones de tipo Intexp")
         
@@ -72,10 +72,10 @@ class Product (IntExp):
         return self.expr1.run(state) * self.expr2.run(state)
 
 class Subs(IntExp): 
-    def __init__(self, expr1:IntExp, expr2:IntExp ):
+    def __init__(self, expr1:IntExp, expr2:IntExp):
         if (isinstance(expr1,IntExp) and isinstance(expr2, IntExp)): 
-            self.sum1 = expr1
-            self.sum2 = expr2
+            self.expr1 = expr1
+            self.expr2 = expr2
         else: 
             raise TypeError(f"Subs solo acepta expresiones de tipo Intexp")
         
@@ -88,8 +88,8 @@ class Subs(IntExp):
 class Div(IntExp): 
     def __init__(self, expr1:IntExp, expr2:IntExp):
         if (isinstance(expr1,IntExp) and isinstance(expr2, IntExp)): 
-            self.sum1 = expr1
-            self.sum2 = expr2
+            self.expr1 = expr1
+            self.expr2 = expr2
         else: 
             raise TypeError(f"Div solo acepta expresiones de tipo Intexp")
     
@@ -102,8 +102,8 @@ class Div(IntExp):
 class Mod(IntExp): 
     def __init__(self, expr1:IntExp, expr2:IntExp ):
         if (isinstance(expr1,IntExp) and isinstance(expr2, IntExp)): 
-            self.sum1 = expr1
-            self.sum2 = expr2
+            self.expr1 = expr1
+            self.expr2 = expr2
         else: 
             raise TypeError(f"Mod solo acepta expresiones de tipo Intexp")
     

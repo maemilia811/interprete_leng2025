@@ -1,4 +1,4 @@
-from type import Output, Fail_type, State
+from type import Output_type, Fail_type, State
 from intexp import *
 from boolexp import * 
 
@@ -8,7 +8,7 @@ run :: State -> State
 """
 
 class Comm:
-    def run():
+    def run(self,state):
         pass 
 
 #SIMPLE COMMANDS 
@@ -65,12 +65,12 @@ class If(Comm):
         return f"If {self.guard} then {self.comm1} else {self.comm2}"
     
     def run(self, state:State): 
-        if isinstance(self.guard.run(state), Tr): 
+        if self.guard.run(state):    
             return self.comm1.run(state)
         else:
             return self.comm2.run(state)
 
-class While(Comm):   #corregido
+class While(Comm):  
     def __init__(self, condition:Boolexp, comm:Comm): 
         if isinstance(condition, Boolexp) and isinstance(comm,Comm):
             self.comm = comm
@@ -83,8 +83,10 @@ class While(Comm):   #corregido
     
     def run(self, state:State): 
         st_modified = State(state.copy())
-        while isinstance(self.guard.run(st_modified), Tr): 
+        while self.guard.run(st_modified): 
             st_modified = star(self.comm, st_modified)   
+            if detected_failure(st_modified):
+                return st_modified
         return st_modified
 
 class Newvar(Comm):
@@ -103,13 +105,13 @@ class Newvar(Comm):
         old_value = get_old_value(self.var, state)
         if old_value != {}: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            return daga(Assign(self.var, Nat(old_value)), st_modified)
+            return daga(Assign(self.var, Num(old_value)), st_modified)
         else: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
             return delete_var(self.var, st_modified)
         
 #FAILURES 
-class Fail(Comm):      #corregido
+class Fail(Comm):      
     def __init__(self):
         self.fail = 'Fail'
     
@@ -122,13 +124,13 @@ class Fail(Comm):      #corregido
         else: 
             return Fail_type(self.fail,state)   
               
-class Catch(Comm):  #corregido
+class Catch(Comm):  
     def __init__(self, comm1:Comm, comm2:Comm):
         if isinstance(comm1, Comm) and isinstance(comm2, Comm):   
             self.comm1 = comm1
             self.comm2 = comm2 
         else: 
-            raise TypeError("Parámetros no validos para Newvar")
+            raise TypeError("Parámetros no validos para Catch")
         
     def __repr__(self):
         return f"Catch {self.comm1} with {self.comm2}"
@@ -148,7 +150,7 @@ class Out(Comm):
         return f"Out({self.expr})"
     
     def run(self, state:State): 
-        return Output(self.expr.run(state), state)
+        return Output_type(self.expr.run(state), state)
 
 class Inp(Comm):
     def __init__(self, var:Var): 
@@ -162,9 +164,9 @@ class Inp(Comm):
             new_state = State(state.copy())
             new_state[str(self.var)] = value
             return new_state
-        elif isinstance(state, Output):
+        elif isinstance(state, Output_type):
             head, tail = state
-            return Output(head, self._update_recursive(tail, value))
+            return Output_type(head, self._update_recursive(tail, value))
         else: 
             raise TypeError(f"Estado no reconocible: {state!r}")
 
@@ -181,10 +183,9 @@ class Inp(Comm):
 #--- (_)*
 def star(comm:Comm, x): 
     if isinstance(x,Fail_type): 
-        print('estado de fail', x)
         return x 
-    elif isinstance(x,Output): 
-        return Output(x[0], star(comm,x[1]))  
+    elif isinstance(x,Output_type): 
+        return Output_type(x[0], star(comm,x[1]))  
     else: 
         return comm.run(x)
 
@@ -192,8 +193,8 @@ def star(comm:Comm, x):
 def  ext_catch(comm:Comm, x): 
     if isinstance(x,Fail_type): 
         return comm.run(x[1])
-    elif isinstance(x,Output):  
-        return Output(x[0], ext_catch(comm,x[1]))  
+    elif isinstance(x,Output_type):  
+        return Output_type(x[0], ext_catch(comm,x[1]))  
     else: 
         return x
     
@@ -201,14 +202,14 @@ def  ext_catch(comm:Comm, x):
 def daga(comm:Comm, x): 
     if isinstance(x,Fail_type): 
         return Fail_type(x[0], comm.run(x[1]))  #si está bien implementado no debería romperse aca
-    elif isinstance(x, Output): 
-        return Output(x[0], daga(comm, x[1]))
+    elif isinstance(x, Output_type): 
+        return Output_type(x[0], daga(comm, x[1]))
     else: 
         return comm.run(x)
 
 def delete_var(var, state): 
-    if isinstance(state, Output): 
-        return Output(state[0], delete_var(var,state[1]))
+    if isinstance(state, Output_type): 
+        return Output_type(state[0], delete_var(var,state[1]))
     elif isinstance(state, Fail_type): 
         return Fail_type(state[0], delete_var(var,state[1]))
     else: 
@@ -216,10 +217,18 @@ def delete_var(var, state):
         return state
     
 def get_old_value(var, state): 
-    if isinstance(state, Output) or isinstance(state,Fail_type): 
+    if isinstance(state, Output_type) or isinstance(state,Fail_type): 
         return get_old_value(var,state[1])
     else: 
         if str(var) in state.keys():
             return state[str(var)]
         else:
             return {}
+
+def detected_failure(state): 
+    if isinstance(state,State): 
+        return False
+    elif isinstance(state,Output_type): 
+        return detected_failure(state[1])
+    elif isinstance(state, Fail_type):
+        return True      
