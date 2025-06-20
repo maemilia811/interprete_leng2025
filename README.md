@@ -7,6 +7,12 @@ Dado un programa en LIS, el intérprete lo ejecuta y retorna un estado modificad
 - Fail_type: _('Fail',estado)_ para indicar que hubo error. 
 
 Se mantiene la misma idea de dominio semántico recursivo, de manera tal que si se realizan varios outputs, se anidan tuplas. 
+## Running 
+Se puede ejecutar el intérprete mediante comando: 
+```bash
+python3 src/main.py 
+```
+En main hay ejemplos de programas en LIS que se pueden ejecutar. En caso de probar con otro programa, añadirlo en este archivo y ejecutar el comando nuevamente.
 
 ## Comandos del lenguaje LIS
 Los siguientes comandos se implementan mediante una clase en Python, cada uno de los cuales representa una instrucción del lenguaje LIS:

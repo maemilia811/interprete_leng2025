@@ -104,4 +104,40 @@ def main():
     ).run(state))
     print(While(Tr(),Fail()).run(state))
 
+    print(Catch(
+            Seq(
+                Assign(Var('contador'), Num(4)),
+                While(
+                    GreaterThan(Var('contador'), Num(0)),
+                    Seq(
+                        Out(Var('contador')),
+                        If(
+                            Equal(Var('contador'), Num(2)),
+                            Fail(),
+                            Assign(Var('contador'), Subs(Var('contador'), Num(1)))
+                        )
+                    )
+                )
+            ),
+            Out(Num(999)) 
+    ).run(state))
+
+    print(Seq(
+            Assign(Var('x'), Num(100)), 
+            Catch(
+                Newvar(
+                    Var('x'), 
+                    Num(5),
+                    Seq(
+                        Out(Var('x')), 
+                        Fail()         
+                    )
+                ),
+                Seq(
+                    Out(Num(888)), 
+                    Out(Var('x'))  
+                )
+            )
+        ).run(state))
+
 main()
