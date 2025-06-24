@@ -49,8 +49,16 @@ class Seq(Comm):
     def __repr__(self):
         return f"Seq({self.comm1}, {self.comm2})"
     
+    def _star(self, comm:Comm, x): 
+        if isinstance(x,Fail_type): 
+            return x 
+        elif isinstance(x,Output_type): 
+            return Output_type(x[0], self._star(comm,x[1]))  
+        else: 
+            return comm.run(x)
+        
     def run(self, state:State):
-        return star(self.comm2, self.comm1.run(state))
+        return self._star(self.comm2, self.comm1.run(state))
 
 class If(Comm):  
     def __init__(self,condition,comm1:Comm,comm2:Comm):
@@ -81,11 +89,27 @@ class While(Comm):
     def __repr__(self):
         return f"While {self.guard} do {self.comm}"
     
+    def _detected_failure(self, state): 
+        if isinstance(state,State): 
+            return False
+        elif isinstance(state,Output_type): 
+            return self._detected_failure(state[1])
+        elif isinstance(state, Fail_type):
+            return True 
+        
+    def _star(self, comm:Comm, x): 
+        if isinstance(x,Fail_type): 
+            return x 
+        elif isinstance(x,Output_type): 
+            return Output_type(x[0], self._star(comm,x[1]))  
+        else: 
+            return comm.run(x)
+
     def run(self, state:State): 
         st_modified = State(state.copy())
         while self.guard.run(st_modified): 
-            st_modified = star(self.comm, st_modified)   
-            if detected_failure(st_modified):
+            st_modified = self._star(self.comm, st_modified)   
+            if self._detected_failure(st_modified):
                 return st_modified
         return st_modified
 
@@ -100,15 +124,41 @@ class Newvar(Comm):
 
     def __repr__(self):
         return f"Newvar {self.var}:= {self.expr} in {self.comm}"
+    
+    def _delete_var(self, var, state): 
+        if isinstance(state, Output_type): 
+            return Output_type(state[0], self._delete_var(var,state[1]))
+        elif isinstance(state, Fail_type): 
+            return Fail_type(state[0], self._delete_var(var,state[1]))
+        else: 
+            del state[str(var)]
+            return state
+    
+    def _get_old_value(self, var, state): 
+        if isinstance(state, Output_type) or isinstance(state,Fail_type): 
+            return self._get_old_value(var,state[1])
+        else: 
+            if str(var) in state.keys():
+                return state[str(var)]
+            else:
+                return {}
 
+    def _daga(self, comm:Comm, x): 
+        if isinstance(x,Fail_type): 
+            return Fail_type(x[0], comm.run(x[1])) 
+        elif isinstance(x, Output_type): 
+            return Output_type(x[0], self._daga(comm, x[1]))
+        else: 
+            return comm.run(x)
+    
     def run(self, state:State): 
-        old_value = get_old_value(self.var, state)
+        old_value = self._get_old_value(self.var, state)
         if old_value != {}: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            return daga(Assign(self.var, Num(old_value)), st_modified)
+            return self._daga(Assign(self.var, Num(old_value)), st_modified)
         else: 
             st_modified = self.comm.run(Assign(self.var, self.expr).run(state))
-            return delete_var(self.var, st_modified)
+            return self._delete_var(self.var, st_modified)
         
 #FAILURES 
 class Fail(Comm):      
@@ -135,8 +185,16 @@ class Catch(Comm):
     def __repr__(self):
         return f"Catch {self.comm1} with {self.comm2}"
     
+    def  _ext_catch(self, comm:Comm, x): 
+        if isinstance(x,Fail_type): 
+            return comm.run(x[1])
+        elif isinstance(x,Output_type):  
+            return Output_type(x[0], self._ext_catch(comm,x[1]))  
+        else: 
+            return x
+    
     def run(self, state:State):
-        return ext_catch(self.comm2, self.comm1.run(state))
+        return self._ext_catch(self.comm2, self.comm1.run(state))
 
 #IO
 class Out(Comm): 
@@ -179,56 +237,3 @@ class Inp(Comm):
             except ValueError:
                 print(f"«{num}» no es un entero válido. Intenta de nuevo\n")
 
-#EXTENSIONES           
-#--- (_)*
-def star(comm:Comm, x): 
-    if isinstance(x,Fail_type): 
-        return x 
-    elif isinstance(x,Output_type): 
-        return Output_type(x[0], star(comm,x[1]))  
-    else: 
-        return comm.run(x)
-
-#--- (_)+
-def  ext_catch(comm:Comm, x): 
-    if isinstance(x,Fail_type): 
-        return comm.run(x[1])
-    elif isinstance(x,Output_type):  
-        return Output_type(x[0], ext_catch(comm,x[1]))  
-    else: 
-        return x
-    
-#--- ()$ 
-def daga(comm:Comm, x): 
-    if isinstance(x,Fail_type): 
-        return Fail_type(x[0], comm.run(x[1])) 
-    elif isinstance(x, Output_type): 
-        return Output_type(x[0], daga(comm, x[1]))
-    else: 
-        return comm.run(x)
-
-def delete_var(var, state): 
-    if isinstance(state, Output_type): 
-        return Output_type(state[0], delete_var(var,state[1]))
-    elif isinstance(state, Fail_type): 
-        return Fail_type(state[0], delete_var(var,state[1]))
-    else: 
-        del state[str(var)]
-        return state
-    
-def get_old_value(var, state): 
-    if isinstance(state, Output_type) or isinstance(state,Fail_type): 
-        return get_old_value(var,state[1])
-    else: 
-        if str(var) in state.keys():
-            return state[str(var)]
-        else:
-            return {}
-
-def detected_failure(state): 
-    if isinstance(state,State): 
-        return False
-    elif isinstance(state,Output_type): 
-        return detected_failure(state[1])
-    elif isinstance(state, Fail_type):
-        return True      
